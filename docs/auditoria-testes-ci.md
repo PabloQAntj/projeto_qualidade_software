@@ -2,7 +2,23 @@
 
 **Data da auditoria:** 2026-11-11
 **Escopo:** configuração Maven, workflow GitHub Actions, testes Java e Node, Testcontainers/PostgreSQL, JaCoCo, SonarCloud, evidências e documentação.
-**Restrição respeitada:** nenhum teste foi executado para esta revisão documental; foram consultadas configurações e evidências de execuções já existentes.
+**Nota sobre o escopo:** a auditoria original de 2026-11-11 não executou testes.
+As validações posteriores estão registradas nos adendos abaixo.
+
+> **Adendo SonarCloud — 2026-11-14:** `.github/workflows/ci.yml` agora tenta
+> a análise em todo `push` e `pull_request`, depois de `./mvnw -B verify`. O
+> relatório XML JaCoCo usado é `target/site/jacoco/jacoco.xml`. A etapa usa o
+> secret `SONAR_TOKEN` e espera o Quality Gate (`sonar.qualitygate.wait=true`),
+> portanto o job falha se o token não estiver configurado ou se o gate reprovar.
+> O Automatic Analysis do projeto SonarCloud deve estar desligado. Esta alteração
+> documenta a configuração, não comprova uma execução SonarCloud ou aprovação
+> do Quality Gate. Nesta branch, `./mvnw -B clean verify` terminou com
+> `BUILD SUCCESS`: 222 testes Java, 0 falhas, 0 erros, 0 ignorados; JaCoCo
+> produziu `target/site/jacoco/jacoco.xml`, com 991/1106 linhas (89,60%) e
+> 242/322 branches (75,16%). O log também registrou `[ERROR] Surefire is going
+> to kill self fork JVM. The exit has elapsed 30 seconds after System.exit(0).`,
+> embora a execução Maven tenha terminado com sucesso; a causa permanece sem
+> confirmação.
 
 > **Adendo da branch de correção — 2026-11-14:** a auditoria abaixo é um
 > retrato histórico da configuração e dos resultados conhecidos em 11/11. Nesta
@@ -35,10 +51,10 @@ A aprovação de um job comprova somente os comandos executados naquele job e re
 | JUnit 5 — testes unitários | **Implementado e comprovado** | `spring-boot-starter-test` fornece JUnit 5. Há testes de entidade (`ReservaTest`), serviço (`ReservaServiceTest`, `SalaServiceTest`), autenticação e inicialização de dados. O CI #24 completou `./mvnw -B verify` com sucesso no commit `d555bae`. |
 | JUnit 5 — integração com banco e API | **Implementado e comprovado** | `ReservaPostgresIntegrationTest` cobre persistência, conflitos, intervalos e concorrência usando PostgreSQL real via Testcontainers. `ReservaApiPostgresE2ETest` inicia a aplicação em porta aleatória e chama endpoints HTTP. O CI #24 inicializou Docker e concluiu Verify com sucesso. |
 | Cobertura dos principais fluxos | **Parcial** | Há cobertura para criação, consulta, alteração, cancelamento, conflitos, estados e aspectos de sessão/perfil/posse. Não há jornada E2E autenticada completa; RF12, estados operacionais, auditoria, relatórios e integração de notificação permanecem ausentes ou pendentes conforme a RTM e a estratégia. Testes de listagem de catálogo não comprovam CRUD administrativo nem pesquisa filtrada. |
-| JaCoCo — instrumentação/relatório | **Implementado e comprovado** | `jacoco-maven-plugin` 0.8.12 configura `prepare-agent`, relatórios HTML/XML e `check`; `sonar.coverage.jacoco.xmlReportPaths` aponta para `target/site/jacoco/jacoco.xml`. O workflow atual publica Surefire/Failsafe, JaCoCo HTML/XML e `jacoco.exec` como artefato de CI. O run #24 do `main` publicou `test-reports-43054180565-1`. |
+| JaCoCo — instrumentação/relatório | **Implementado e comprovado** | `jacoco-maven-plugin` 0.8.16 configura `prepare-agent`, relatórios HTML/XML e `check`; `sonar.coverage.jacoco.xmlReportPaths` aponta para `target/site/jacoco/jacoco.xml`. `./mvnw -B clean verify` nesta branch gerou o XML de cobertura, além de HTML e `jacoco.exec`; o workflow publica esses relatórios como artefato de CI. O run #24 do `main` publicou `test-reports-43054180565-1`. |
 | JaCoCo — metas exigidas pelo build | **Implementado e comprovado** | O POM executa `jacoco:check` na fase `verify`, exigindo no bundle pelo menos 80% de cobertura de linhas e 70% de branches. O CI #24 do commit `d555bae` concluiu com sucesso; os limites são aplicados pelo build, não apenas recomendados pela estratégia. |
 | SonarCloud — análise | **Implementado e comprovado** | O CI #21, anterior ao PR #13, executou “Analyze with SonarCloud” e os logs registram `ANALYSIS SUCCESSFUL`/upload do relatório. A consulta anterior ao painel registrou Quality Gate `OK`, cobertura global 86,8%, cobertura de branches 79,9%, 0 bugs, 0 vulnerabilidades e 2 code smells; esses números não são atribuídos ao CI #24 nem provam cada requisito funcional. |
-| SonarCloud — integração no build/Quality Gate | **Parcial** | A etapa só roda quando `SONAR_ORGANIZATION` e `SONAR_PROJECT_KEY` estão configuradas; sem elas, é ignorada. Se as variáveis existem e `SONAR_TOKEN` falta, o workflow falha explicitamente. O workflow não configura espera explícita (`sonar.qualitygate.wait`). O painel consultado anteriormente informava `new_coverage` de 84,1% contra 80%; isso é uma condição do Sonar, distinta dos limites totais de 80% linhas/70% branches impostos por JaCoCo no Maven. |
+| SonarCloud — integração no build/Quality Gate | **Configurado; execução atual não verificada** | A etapa roda em todo `push` e `pull_request` após Verify, usando o secret `SONAR_TOKEN`, `target/site/jacoco/jacoco.xml` e `sonar.qualitygate.wait=true`. A execução falha se o secret faltar ou o Quality Gate reprovar. O Automatic Analysis deve estar desligado no SonarCloud. A configuração não é evidência de que uma análise foi executada ou aprovada. O painel consultado anteriormente informava `new_coverage` de 84,1% contra 80%; esse dado histórico não representa esta alteração nem o resultado de uma execução atual. |
 | GitHub Actions — execução Java | **Implementado e comprovado** | [Workflow `ci.yml`](../.github/workflows/ci.yml) roda em `push` e `pull_request`, configura Java 21, verifica Docker e executa `./mvnw -B verify`. O PR #13 foi incorporado ao `main` no commit `d555bae`. A execução mais recente consultada é [CI #24](https://github.com/WesMarquess/projeto_qualidade_software/actions/runs/43054180565), nesse commit, concluída em 2026-11-11 com sucesso. |
 | GitHub Actions — artefatos de teste | **Implementado e comprovado** | O workflow usa `actions/upload-artifact@v4` para publicar relatórios Surefire/Failsafe, relatórios JaCoCo e `jacoco.exec`, com retenção de 14 dias. O CI #24 publicou o artefato `test-reports-43054180565-1` (715.206 bytes; expira em 2026-11-25). Os planos/relatórios JMeter locais não fazem parte desse artefato. |
 | Testcontainers/PostgreSQL | **Implementado e comprovado** | `pom.xml` inclui `org.testcontainers:junit-jupiter` e `org.testcontainers:postgresql` (versão 1.21.4). As duas classes de integração declaram `@Testcontainers`, um `@Container` estático `PostgreSQLContainer<>("postgres:16")`, readiness com `pg_isready` e propriedades datasource via `@DynamicPropertySource`. CI inicializa Docker antes de Verify. |
@@ -82,9 +98,9 @@ O teste JMeter de criação não foi executado nesta série e não é declarado 
 |---|---|
 | Workflow ativo e definição dos comandos | PR #13 incorporado ao `main` em `d555bae`; workflow atual contém Verify, Node e upload de relatórios. |
 | Execução remota mais recente | [CI #24](https://github.com/WesMarquess/projeto_qualidade_software/actions/runs/43054180565), no `main` em `d555bae`, concluída com sucesso em 2026-11-11. CI #21 é evidência histórica do commit `4cb9799` (2026-11-08). |
-| JaCoCo | `pom.xml` configura `check` em `verify`, com limites de 80% linhas e 70% branches. Relatórios locais (`target/surefire-reports`, `target/jacoco.exec` e `target/site/jacoco/jacoco.xml`) estão presentes no checkout, mas não foram gerados nesta revisão. |
+| JaCoCo | `pom.xml` configura `check` em `verify`, com limites de 80% linhas e 70% branches. `./mvnw -B clean verify` nesta branch gerou `target/jacoco.exec` e `target/site/jacoco/jacoco.xml`; cobertura observada: 991/1106 linhas (89,60%) e 242/322 branches (75,16%). |
 | Artefato do CI #24 | `test-reports-43054180565-1` publicado, com expiração em 2026-11-25. |
-| SonarCloud | O CI #21 executou a análise SonarCloud; o CI #24 foi confirmado como sucesso geral, mas esta revisão não atribui a ele um resultado de análise Sonar específica. |
+| SonarCloud | A execução Sonar da configuração atual não foi verificada nesta auditoria. O CI #21 é evidência histórica, anterior à configuração atual; não se atribui a ela um resultado de análise ou Quality Gate. |
 | Resultados JMeter de 11/11/2026 | JTL e relatórios HTML presentes em `target/jmeter/consulta-20261111-151033658/` e `target/jmeter/contencao-20261111-1617/`. Estão ignorados pelo Git e não são publicados como artefatos do CI. |
 | Execução Node | Workflow atual configura Node 24 e executa `node --test tests/*.test.js`; CI #24 concluiu com sucesso. A execução histórica de 10 testes de 2026-10-15 continua sendo evidência de outra revisão. |
 | Criação JMeter | Não executada na série de 11/11/2026; permanece sem resultado atual e não é marcada como concluída. |
@@ -95,7 +111,7 @@ O teste JMeter de criação não foi executado nesta série e não é declarado 
 2. **P1 — Retenção e rastreabilidade das evidências:** o CI já publica relatórios Java/JaCoCo por 14 dias; preservar os resultados necessários após a expiração e identificar cada evidência com revisão/ambiente. JMeter continua fora do CI.
 3. **P2 — Validação visual do frontend:** os testes Node agora rodam na CI; permanecem pendentes a validação em navegador, responsividade e acessibilidade.
 4. **P2 — Contrato HTTP:** avaliar REST-assured ou ferramenta equivalente e automatizar validação de respostas de API contra OpenAPI; a estratégia planeja REST-assured, ausente do POM.
-5. **P2 — Qualidade Sonar:** o workflow não espera explicitamente o resultado do Quality Gate antes de encerrar o job; decidir se o gate deve bloquear merge e alinhar as condições Sonar ao critério de cobertura total adotado pelo build.
+5. **P2 — Qualidade Sonar:** confirmar que o Automatic Analysis está desligado no SonarCloud e cadastrar `SONAR_TOKEN` em GitHub Actions; a configuração do workflow agora aguarda o Quality Gate e falha quando ele reprova.
 6. **P3 — Integrações futuras:** se RF19 ganhar integração HTTP externa, adicionar cliente, WireMock e testes de sucesso, timeout e falha; não implementar WireMock antes da decisão de escopo.
 7. **P3 — Teste de carga:** decidir se JMeter será rotina de CI ou validação manual periódica; preservar os JTL/relatórios locais junto à revisão e ambiente, pois os resultados atuais estão sob `target/` ignorado e não são publicados no CI.
 

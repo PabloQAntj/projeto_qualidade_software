@@ -55,17 +55,12 @@ jobs:
           retention-days: 14
 
       - name: Analyze with SonarCloud
-        if: ${{ vars.SONAR_ORGANIZATION != '' && vars.SONAR_PROJECT_KEY != '' }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_ORGANIZATION: ${{ vars.SONAR_ORGANIZATION }}
-          SONAR_PROJECT_KEY: ${{ vars.SONAR_PROJECT_KEY }}
         run: |
-          if [ -z "$SONAR_TOKEN" ]; then
-            echo "::error::Configure the SONAR_TOKEN repository secret to enable SonarCloud analysis."
-            exit 1
-          fi
           ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-            "-Dsonar.organization=$SONAR_ORGANIZATION" \
-            "-Dsonar.projectKey=$SONAR_PROJECT_KEY" \
-            "-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml"
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.organization=WesMarquess_projeto_qualidade_software \
+            -Dsonar.projectKey=WesMarquess_projeto_qualidade_software \
+            -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
+            -Dsonar.qualitygate.wait=true

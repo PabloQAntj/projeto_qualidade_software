@@ -89,8 +89,9 @@ abaixo de 80% de linhas ou 70% de branches. Abra
 ### Verificação local registrada
 
 Na branch `release/rc1-blocker-fixes`, `./mvnw -B clean verify` passou em
-2026-11-14 com 222 testes Java, zero falhas/erros/ignorados; cobertura JaCoCo
-89,60% de linhas (991/1106) e 75,16% de branches (242/322).
+2026-11-14, durante esta alteração, com 222 testes Java e zero falhas, erros
+ou ignorados; cobertura JaCoCo de 89,60% de linhas (991/1106) e 75,16% de
+branches (242/322).
 `node --test tests/*.test.js` passou com 19 testes. São resultados locais da branch, não da
 CI ou `main`; veja [RTM](docs/RTM.md) e [decisão de qualidade](docs/decisao-qualidade.md).
 
@@ -105,19 +106,21 @@ desempenho de produção.
 
 ## SonarCloud
 
-O workflow do GitHub Actions executa a análise SonarCloud após `./mvnw -B verify`
-quando as Actions **variables** `SONAR_ORGANIZATION` e `SONAR_PROJECT_KEY`
-estiverem cadastradas no repositório. Cadastre `SONAR_TOKEN` em Actions
-**secrets**; nunca salve token no código ou em arquivos `.env` versionados.
-O relatório XML de cobertura enviado à análise é gerado pelo JaCoCo em
-`target/site/jacoco/jacoco.xml`.
+O workflow do GitHub Actions executa a análise SonarCloud em todo `push` e
+`pull_request`, após `./mvnw -B verify`, que gera o relatório JaCoCo em
+`target/site/jacoco/jacoco.xml`. A etapa sempre roda: se o secret `SONAR_TOKEN`
+não estiver configurado em Settings > Secrets and variables > Actions, o job
+falha; também falha se o Quality Gate reprovar (`sonar.qualitygate.wait=true`).
+Desative o **Automatic Analysis** nas configurações do projeto SonarCloud para
+usar a análise do GitHub Actions. Nunca salve o token no código, na documentação
+ou em arquivos versionados.
 
 Para executar localmente, use os valores reais do projeto e forneça o token pelo
 ambiente (não o escreva no comando nem no histórico do shell):
 
 ```
 $env:SONAR_TOKEN = "<token>"
-.\mvnw.cmd -B verify sonar:sonar "-Dsonar.organization=<organização>" "-Dsonar.projectKey=<projectKey>" "-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml"
+.\mvnw.cmd -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar "-Dsonar.host.url=https://sonarcloud.io" "-Dsonar.organization=WesMarquess_projeto_qualidade_software" "-Dsonar.projectKey=WesMarquess_projeto_qualidade_software" "-Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml" "-Dsonar.qualitygate.wait=true"
 ```
 
 No PowerShell, remova o token da sessão ao terminar:

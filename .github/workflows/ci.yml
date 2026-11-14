@@ -60,7 +60,7 @@ jobs:
         run: |
           ./mvnw -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
             -Dsonar.host.url=https://sonarcloud.io \
-            -Dsonar.organization=WesMarquess_projeto_qualidade_software \
-            -Dsonar.projectKey=WesMarquess_projeto_qualidade_software \
+            -Dsonar.organization=pabloqantj \
+            -Dsonar.projectKey=pabloqantj \
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml \
             -Dsonar.qualitygate.wait=true
